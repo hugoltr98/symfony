@@ -6,6 +6,7 @@ use LDAP\Result;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use function Symfony\Component\String\u;
 
 class TodoAppController extends AbstractController
 {
@@ -20,6 +21,7 @@ class TodoAppController extends AbstractController
             ['song' => 'On Bended Knee', 'artist' => 'Boyz II Men'],
             ['song' => 'Fantasy', 'artist' => 'Mariah Carey'],
         ];
+        dump($tracks);
 
         return $this->render('todoApp/homepage.html.twig', [
             'title' => 'PB & Jams',
@@ -30,15 +32,9 @@ class TodoAppController extends AbstractController
     #[Route('/browse/{slug}')]
     public function browse(string $slug = null): Response
     {
-        if($slug)
-        {
-            $title = str_replace('-', ' ', $slug);
-        }
-        else 
-        {
-            $title = 'Fin du test';
-        }
-        
-        return new Response('Message de test : '.$title);
+        $genre = $slug ? u(str_replace('-', ' ', $slug))->title(true) : null;
+        return $this->render('todoApp/browse.html.twig', [
+            'genre' => $genre
+        ]);
     }
 }
