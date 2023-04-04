@@ -3,14 +3,22 @@
 namespace App\Controller;
 
 use App\Entity\Product;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Repository\ProductRepository;
+use Doctrine\Persistence\ManagerRegistry;
+use mysql_xdevapi\Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Runtime\ResolverInterface;
 
+
 class ProductController extends AbstractController
 {
+    private ProductRepository $productRepository;
+    public function __construct(ManagerRegistry $doctrine)
+    {
+        $this->productRepository = $doctrine->getRepository(Product::class);
+    }
     #[Route('/product', name: 'app_product')]
     public function index(): Response
     {
@@ -20,57 +28,58 @@ class ProductController extends AbstractController
     }
 
     #[Route('/product/create', name: 'create_product')]
-    public function createProduct(EntityManagerInterface $entityManager): Response
+    public function createProduct(ManagerRegistry $doctrine): Response
     {
         $product = new Product();
         $product->setName('Keyboard');
         $product->setPrice(1999);
         $product->setDescription('Ergonomic and stylish!');
-        $entityManager->persist($product);
-        $entityManager->flush();
+        $doctrine->persist($product);
+        $doctrine->flush();
 
-        return new Response('Saved new product with id '.$product->getId());
+        return new Response('Saved new product with id ' . $product->getId());
     }
 
     #[Route('/product/{id}', name: 'product_show')]
-    public function show(EntityManagerInterface $entityManager, int $id): Response
+    public function show(ManagerRegistry $doctrine, int $id): Response
     {
-        $product = $entityManager->getRepository(Product::class)->find($id);
+        $product = $doctrine->getRepository(Product::class)->find($id);
 
-        if(!$product)
-        {
-            throw $this->createNotFoundException('No product found for id'.$id);
+        if (!$product) {
+            throw $this->createNotFoundException('No product found for id' . $id);
         }
 
-        return new Response('Check out this great product: '.$product->getName());
+        return new Response('Check out this great product: ' . $product->getName());
     }
 
     #[Route('/product/edit/{id}', name: 'product_edit')]
-    public function update(EntityManagerInterface $entityManager, int $id): Response
+    public function update(ManagerRegistry $doctrine, int $id): Response
     {
-        $product = $entityManager->getRepository(Product::class)->find($id);
-        if(!$product)
-        {
-            throw $this->createNotFoundException('No product found for id ' .$id);
+        $product = $doctrine->getRepository(Product::class)->find($id);
+        if (!$product) {
+            throw $this->createNotFoundException('No product found for id ' . $id);
         }
 
         $product->setName('New product name');
-        $entityManager->flush();
+        $doctrine->flush();
 
         return $this->redirectToRoute('product_show', ['id' => $product->getId()]);
     }
 
     #[Route('/product/delete/{id}', name: 'product_delete')]
-    public function delete(EntityManagerInterface $entityManager, int $id): Response
+    public function delete(int $id): Response
     {
-        $product = $entityManager->getRepository(Product::class)->find($id);
-        if(!$product)
+        try
         {
-            throw $this->createNotFoundException('No product found for id ' .$id);
+            $product = $this->productRepository->find($id);
+            dd($product);
+            $this->productRepository->remove($product, true);
+            return new Response('Produit supprimé');
         }
-        $entityManager->remove($product);
-        $entityManager->flush();
-
-        return new Response('Votre produit à bien était supprimé');
+        catch (Exception $e)
+        {
+            error_log($e->getMessage());
+            return new Response('Une erreure est survenue');
+        }
     }
 }
