@@ -15,10 +15,12 @@ use Symfony\Component\Runtime\ResolverInterface;
 class ProductController extends AbstractController
 {
     private ProductRepository $productRepository;
+
     public function __construct(ManagerRegistry $doctrine)
     {
         $this->productRepository = $doctrine->getRepository(Product::class);
     }
+
     #[Route('/product', name: 'app_product')]
     public function index(): Response
     {
@@ -69,15 +71,12 @@ class ProductController extends AbstractController
     #[Route('/product/delete/{id}', name: 'product_delete')]
     public function delete(int $id): Response
     {
-        try
-        {
+        try {
             $product = $this->productRepository->find($id);
             dd($product);
             $this->productRepository->remove($product, true);
             return new Response('Produit supprimé');
-        }
-        catch (Exception $e)
-        {
+        } catch (Exception $e) {
             error_log($e->getMessage());
             return new Response('Une erreure est survenue');
         }
