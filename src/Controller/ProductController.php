@@ -73,7 +73,6 @@ class ProductController extends AbstractController
     {
         try {
             $product = $this->productRepository->find($id);
-            dd($product);
             $this->productRepository->remove($product, true);
             return new Response('Produit supprimé');
         } catch (Exception $e) {

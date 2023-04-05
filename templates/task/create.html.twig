@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+{% form_theme form 'bootstrap_4_layout.html.twig' %}
+
+{% block title %}Create Task{% endblock %}
+
+{% block body %}
+    <h1>Ajouter une tâche :</h1>
+    {{ form(form) }}
+
+
+{% endblock %}
