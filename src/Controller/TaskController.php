@@ -4,7 +4,8 @@ namespace App\Controller;
 
 use App\Entity\Task;
 use App\Form\TaskType;
-use Symfony\Bridge\Doctrine\ManagerRegistry;
+use App\Repository\TaskRepository;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
@@ -13,9 +14,17 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
+use function Symfony\Component\String\u;
 
 class TaskController extends AbstractController
 {
+
+    private TaskRepository $taskRepository;
+
+    public function __construct(ManagerRegistry $doctrine)
+    {
+        $this->taskRepository = $doctrine->getRepository(Task::class);
+    }
     #[Route('/task', name: 'app_task')]
     public function index(): Response
     {
@@ -26,7 +35,7 @@ class TaskController extends AbstractController
     }
 
     #[Route('/task/create', name: 'app_task_create')]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(Request $request,TaskRepository $taskRepository ,EntityManagerInterface $entityManager): Response
     {
         $task = new Task();
 
@@ -35,10 +44,10 @@ class TaskController extends AbstractController
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $task = $form->getData();
-            $entityManager->persist($task);
+            $this->taskRepository->save($task);
             $entityManager->flush();
 
-            return $this->redirectToRoute('app_task_list');
+            return $this->redirectToRoute('app_task');
         }
 
         return $this->render('task/create.html.twig', ['form' => $form->createView()]);
